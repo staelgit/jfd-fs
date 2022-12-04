@@ -4,7 +4,6 @@ const { check, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { generateUserData } = require('../utils/helpers');
 const tokenService = require('../services/token.service');
-const e = require('express');
 const router = express.Router({ mergeParams: true });
 
 router.post('/signUp', [
