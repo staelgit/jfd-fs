@@ -34,8 +34,8 @@ export const loadQualitiesList = () => async (dispatch, getState) => {
     if (isOutdated(lastFetch)) {
         dispatch(qualitiesRequested());
         try {
-            const { content } = await qualityService.fetchAll();
-            dispatch(qualitiesReceved(content));
+           const { content } = await qualityService.fetchAll();
+           dispatch(qualitiesReceved(content));
         } catch (error) {
             dispatch(qualitiesRequestFiled(error.message));
         }

@@ -3,7 +3,6 @@ import authService from "../services/auth.service";
 import localStorageService from "../services/localStorage.service";
 import userService from "../services/user.service";
 import { generetaAuthError } from "../utils/generateAuthError";
-import getRandomInt from "../utils/getRandomInt";
 import history from "../utils/history";
 const initialState = localStorageService.getAccessToken()
     ? {
@@ -73,14 +72,11 @@ const {
     usersRequestFiled,
     authRequestFailed,
     authRequestSuccess,
-    userCreated,
     userLoggedOut,
     userUpdateSuccessed
 } = actions;
 
 const authRequested = createAction("users/authRequested");
-const userCreateRequested = createAction("users/userCreateRequested");
-const createUserFailed = createAction("users/createUserFailed ");
 const userUpdateFailed = createAction("users/userUpdateFailed");
 const userUpdateRequested = createAction("users/userUpdateRequested");
 
@@ -91,8 +87,8 @@ export const login =
         dispatch(authRequested());
         try {
             const data = await authService.login({ email, password });
-            dispatch(authRequestSuccess({ userId: data.localId }));
-            localStorageService.setTokens(data);
+           localStorageService.setTokens(data);
+           dispatch(authRequestSuccess({ userId: data.userId }));
             history.push(redirect);
         } catch (error) {
             const { code, message } = error.response.data.error;
@@ -106,48 +102,25 @@ export const login =
     };
 
 export const signUp =
-    ({ email, password, ...rest }) =>
+    (payload) =>
     async (dispatch) => {
         dispatch(authRequested());
         try {
-            const data = await authService.register({ email, password });
+            const data = await authService.register(payload);
             localStorageService.setTokens(data);
-            dispatch(authRequestSuccess({ userId: data.localId }));
-            dispatch(
-                createUser({
-                    _id: data.localId,
-                    email,
-                    rate: getRandomInt(1, 5),
-                    completedMeetings: getRandomInt(0, 200),
-                    image: `https://avatars.dicebear.com/api/avataaars/${(
-                        Math.random() + 1
-                    )
-                        .toString(36)
-                        .substring(7)}.svg`,
-                    ...rest
-                })
-            );
+            dispatch(authRequestSuccess({ userId: data.userId }));
+            history.push("/users");
         } catch (error) {
             dispatch(authRequestFailed(error.message));
         }
     };
+
 export const logOut = () => (dispatch) => {
     localStorageService.removeAuthData();
     dispatch(userLoggedOut());
     history.push("/");
 };
-function createUser(payload) {
-    return async function (dispatch) {
-        dispatch(userCreateRequested());
-        try {
-            const { content } = await userService.create(payload);
-            dispatch(userCreated(content));
-            history.push("/users");
-        } catch (error) {
-            dispatch(createUserFailed(error.message));
-        }
-    };
-}
+
 export const loadUsersList = () => async (dispatch) => {
     dispatch(usersRequested());
     try {
@@ -157,6 +130,7 @@ export const loadUsersList = () => async (dispatch) => {
         dispatch(usersRequestFiled(error.message));
     }
 };
+
 export const updateUser = (payload) => async (dispatch) => {
     dispatch(userUpdateRequested());
     try {
